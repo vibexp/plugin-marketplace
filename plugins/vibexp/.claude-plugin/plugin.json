@@ -1,0 +1,21 @@
+{
+  "name": "vibexp",
+  "displayName": "VibeXP",
+  "description": "Best-practice skills for the VibeXP knowledge loop: prime your session with team knowledge before a task, wrap learnings and artifacts back after, consolidate memories over time, run feed-steered work streams, publish reusable prompts, and onboard new projects.",
+  "version": "0.3.0",
+  "author": {
+    "name": "VibeXP"
+  },
+  "homepage": "https://vibexp.io",
+  "repository": "https://github.com/vibexp/plugin-marketplace",
+  "license": "MIT",
+  "keywords": [
+    "vibexp",
+    "mcp",
+    "memory",
+    "knowledge-base",
+    "prompts",
+    "artifacts",
+    "team-knowledge"
+  ]
+}

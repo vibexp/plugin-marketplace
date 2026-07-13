@@ -1,0 +1,16 @@
+{
+  "$schema": "https://code.claude.com/schemas/marketplace.json",
+  "name": "vibexp",
+  "owner": {
+    "name": "VibeXP",
+    "email": "hello@vibexp.io"
+  },
+  "description": "Official Claude Code plugins for VibeXP — the shared knowledge base your AI builds on. Free, open source, self-hostable: https://vibexp.io",
+  "plugins": [
+    {
+      "name": "vibexp",
+      "source": "./plugins/vibexp",
+      "description": "The VibeXP knowledge loop: prime your session with team knowledge before working, write learnings and artifacts back after."
+    }
+  ]
+}
