@@ -24,7 +24,8 @@ Run when finishing a task or session. It:
 2. Shows you a compact write-back plan and asks for one confirmation.
 3. Saves learnings as memories — **deduplicating first**: existing memories are extended or corrected rather than duplicated.
 4. Saves polished outputs as artifacts (updates existing slugs so the server keeps version history).
-5. Posts a status update to your team feed with links to everything created.
+5. Records typed relations between what it wrote and existing resources — `governed-by` a blueprint, `supersedes` a replaced artifact, `explained-by` a memory, `built-from` a prompt — when the server supports resource linking (skipped silently otherwise).
+6. Posts a status update to your team feed with links to everything created.
 
 ### `/vibexp:consolidate [optional scope]`
 
@@ -33,7 +34,7 @@ Run periodically as knowledge-base maintenance (one project at a time). It:
 1. Inventories the project's active memories (drafts are humans' work-in-progress and are never touched).
 2. Diagnoses three problem classes: near-duplicates, stale/contradicted entries (verified against the codebase where possible), and recurring feed lessons that never became memory.
 3. Shows you a gardening plan — merge / correct / archive / promote — and asks for one confirmation.
-4. Executes with full provenance: merged-away and stale memories are **archived, never deleted**, and merged canonical memories record which entries they consolidated.
+4. Executes with full provenance: merged-away and stale memories are **archived, never deleted**, and merged canonical memories record which entries they consolidated — as `supersedes` edges when the server supports resource linking.
 
 ### `/vibexp:report [start <what> | checkpoint | check]`
 
@@ -41,8 +42,8 @@ Run long or autonomous work as a steerable feed thread. `start` opens one feed i
 
 ### `/vibexp:promptify [prompt text or which instruction to capture]`
 
-Turn a prompt that worked into a team asset. Checks the library for an existing prompt to improve first, strips session-specifics, parameterizes with `{{variables}}`, factors shared boilerplate into `@slug`-referenced base prompts, then walks draft → published → MCP-exposed — at which point it becomes a native slash command (with variables as arguments) in every teammate's connected tool.
+Turn a prompt that worked into a team asset. Checks the library for an existing prompt to improve first, strips session-specifics, parameterizes with `{{variables}}`, factors shared boilerplate into `@slug`-referenced base prompts, then walks draft → published → MCP-exposed — at which point it becomes a native slash command (with variables as arguments) in every teammate's connected tool. Published prompts are linked `governed-by` applicable blueprints when the server supports resource linking.
 
 ### `/vibexp:onboard [optional project]`
 
-Bootstrap a repository new to VibeXP. Inventories the repo's AI config (`CLAUDE.md`, `.cursorrules`, `AGENTS.md`, `.cursor/`, copilot instructions, …), dedups against anything already imported, then — behind one confirmation — imports the config files verbatim as per-tool blueprints and seeds 2–4 high-value memories (architecture overview, dev workflow, unwritten conventions). Flags and excludes secrets. Ends by pointing at the loop: prime → wrap → consolidate.
+Bootstrap a repository new to VibeXP. Inventories the repo's AI config (`CLAUDE.md`, `.cursorrules`, `AGENTS.md`, `.cursor/`, copilot instructions, …), dedups against anything already imported, then — behind one confirmation — imports the config files verbatim as per-tool blueprints and seeds 2–4 high-value memories (architecture overview, dev workflow, unwritten conventions), linking each seed memory `governed-by` the blueprint that states its rule when the server supports resource linking. Flags and excludes secrets. Ends by pointing at the loop: prime → wrap → consolidate.

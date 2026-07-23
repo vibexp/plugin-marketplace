@@ -35,11 +35,11 @@ Then inside Claude Code:
 | Skill | What it does |
 |---|---|
 | `/vibexp:prime` | Start a task with your team's knowledge: retrieves the relevant memories, blueprints, artifacts, and recent feed activity for the current project (auto-detected from your git remote) and briefs you before working. |
-| `/vibexp:wrap` | End a session by writing back: durable learnings saved as memories (deduplicated against existing ones), polished outputs saved as versioned artifacts, and a status update posted to your team feed. |
-| `/vibexp:consolidate` | Garden the knowledge base: merge near-duplicate active memories, correct or archive stale and contradicted ones, and promote recurring feed lessons into durable memory. |
+| `/vibexp:wrap` | End a session by writing back: durable learnings saved as memories (deduplicated against existing ones), polished outputs saved as versioned artifacts, typed relations recorded between what was written and existing resources (where the server supports linking), and a status update posted to your team feed. |
+| `/vibexp:consolidate` | Garden the knowledge base: merge near-duplicate active memories, correct or archive stale and contradicted ones, and promote recurring feed lessons into durable memory — merges leave a `supersedes` trail where the server supports linking. |
 | `/vibexp:report` | Run long or autonomous work as a steerable feed thread: post the plan, reply at milestones, and check the thread for human replies before each phase — treating them as course corrections. |
-| `/vibexp:promptify` | Turn a prompt that worked into a team asset: generalize it with `{{variables}}`, factor boilerplate into `@slug` base prompts, and publish it — optionally MCP-exposed as a native slash command in every teammate's tool. |
-| `/vibexp:onboard` | Bootstrap a new project's knowledge base: import the repo's AI config (CLAUDE.md, .cursorrules, AGENTS.md, …) as blueprints and seed a few high-value memories, deduplicating against anything already there. |
+| `/vibexp:promptify` | Turn a prompt that worked into a team asset: generalize it with `{{variables}}`, factor boilerplate into `@slug` base prompts, and publish it — optionally MCP-exposed as a native slash command in every teammate's tool, linked `governed-by` applicable blueprints where the server supports linking. |
+| `/vibexp:onboard` | Bootstrap a new project's knowledge base: import the repo's AI config (CLAUDE.md, .cursorrules, AGENTS.md, …) as blueprints and seed a few high-value memories, deduplicating against anything already there and linking seed memories to the blueprints that state their rules where supported. |
 
 ## Contributing
 

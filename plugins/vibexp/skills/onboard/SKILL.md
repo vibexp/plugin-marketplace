@@ -50,6 +50,7 @@ Present a compact plan and confirm once before writing:
 
 - **Blueprints** — one per config file, e.g.: `CLAUDE.md` → slug `claude-md`, title "Claude Code instructions", metadata `{"tool": "claude-code", "source_path": "CLAUDE.md"}`. Content imported as-is (these files are already written as AI instructions — don't rewrite them), `type: "general"`, `status: "active"`.
 - **Seed memories** — a *small* set (typically 2–4) of durable, high-value facts distilled from the repo, each self-contained: an architecture overview (what the system is, its main components, how they talk), the dev workflow (build/test/run commands that actually work), and any conventions you observed in the code that no config file states. Skip anything a config-file blueprint already covers — memory is for knowledge, not copies.
+- **Typed edges** (only when a `vibexp_io_link_resources` tool is available — otherwise omit this section from the plan): each seed memory `governed-by` the imported blueprint that states the rule it distills (only when a specific blueprint really states it); a new blueprint that replaces a *different* existing one → `supersedes`. Updating the same blueprint needs no edge — the server versions content, and self-links are rejected.
 
 Quality bar over completeness: onboarding should leave the knowledge base *worth priming from*, not stuffed.
 
@@ -57,10 +58,11 @@ Quality bar over completeness: onboarding should leave the knowledge base *worth
 
 - Blueprints: `vibexp_io_create_blueprint` (or `vibexp_io_update_blueprint` for agreed updates — located by `project_id` + `slug`).
 - Memories: `vibexp_io_create_memory` with `status: "active"` and metadata like `{"category": "architecture", "source": "onboarding"}`.
+- Edges: after the writes, record the planned links via `vibexp_io_link_resources` (the project's `project_id`, each end's type + UUID from the create/update responses). No such tool on this server → skip silently, never fail the onboarding over it.
 
 ## Step 6 — Report and hand off to the loop
 
-Summarize what was imported (blueprints with slugs, memories created) with links where returned. Then point the user at the loop these seeds feed:
+Summarize what was imported (blueprints with slugs, memories created, typed edges recorded — created / already existed / skipped when the tool is unavailable) with links where returned. Then point the user at the loop these seeds feed:
 
 - `/vibexp:prime` at the start of the next task — it will now find something.
 - `/vibexp:wrap` at the end of sessions — the base grows from real work.
@@ -73,3 +75,4 @@ Summarize what was imported (blueprints with slugs, memories created) with links
 - Every tool except `vibexp_io_get_user` and `vibexp_io_list_teams` requires `team_id` (UUID or slug).
 - Import instructions verbatim; distill knowledge selectively. Blueprints mirror the repo's config files; memories add what's written nowhere.
 - Never import secrets: if a config file embeds tokens, keys, or internal URLs that shouldn't be team-visible, flag the lines and exclude them from the imported blueprint.
+- Typed edges (`vibexp_io_link_resources`): `governed-by` → object must be a blueprint; `built-from` → object must be a prompt; `explained-by` → object must be a memory; `supersedes` → both ends the same type. No self- or cross-project links; re-linking an existing edge is a safe no-op. Tool not available (older server) → skip linking silently, never fail the skill over it.

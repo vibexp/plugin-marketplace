@@ -54,12 +54,15 @@ Ask the user how far to take it:
 - **Published** — `vibexp_io_update_prompt` with `status: "published"`: the team standard.
 - **Published + MCP-exposed** — additionally `mcp_expose: true` (only valid on published prompts): the prompt becomes a **native MCP prompt** in every connected tool — in Claude Code it appears as a slash command with each `{{variable}}` as an argument. This is the full payoff; recommend it for prompts the team will invoke directly, skip it for base prompts that exist only to be `@`-referenced.
 
+After creating or updating the prompt, if a `vibexp_io_link_resources` tool is available, link it `governed-by` any blueprint whose rules it must obey (the object must be a blueprint; IDs come from search/list results — blueprints have no `get_*` tool, and linking needs only ID + type). `@slug` base-prompt references are composition, not production — note them as future `built-from` candidates, but don't create edges for them. No such tool on this server → skip silently.
+
 ## Step 6 — Report
 
-Confirm what was created or updated: name, slug, status, whether MCP-exposed, and how teammates use it (`@slug` inside other prompts; the slash command name if exposed — teammates may need to reconnect/refresh their MCP session to see a newly exposed prompt).
+Confirm what was created or updated: name, slug, status, whether MCP-exposed, any typed edges recorded (created / already existed / skipped — tool unavailable), and how teammates use it (`@slug` inside other prompts; the slash command name if exposed — teammates may need to reconnect/refresh their MCP session to see a newly exposed prompt).
 
 ## Conventions (apply throughout)
 
 - Every tool except `vibexp_io_get_user` and `vibexp_io_list_teams` requires `team_id` (UUID or slug).
 - Slugs are identity: pick them like API names — stable, descriptive, kebab-case. Renaming a slug later breaks `@` references to it.
 - Improve existing prompts over creating variants; the library compounds by getting sharper, not longer.
+- Typed edges (`vibexp_io_link_resources`): `governed-by` → object must be a blueprint; `built-from` → object must be a prompt; `explained-by` → object must be a memory; `supersedes` → both ends the same type. No self- or cross-project links; re-linking an existing edge is a safe no-op. Tool not available (older server) → skip linking silently, never fail the skill over it.
