@@ -49,7 +49,7 @@ Before deciding anything, fetch full text with `vibexp_io_get_memory` for every 
 
 Present a compact plan grouped by action, then ask for a single go/adjust confirmation:
 
-- **Merge**: which memories combine, one-line summary of the canonical text, which entries get archived.
+- **Merge**: which memories combine, one-line summary of the canonical text, which entries get archived, and the `supersedes` edges to record (canonical → each merged-away entry; only when a `vibexp_io_link_resources` tool is available).
 - **Correct**: which memory, what changes and why (cite the evidence — the newer memory, feed post, or code that contradicts it).
 - **Archive**: which memory, why it no longer earns its place.
 - **Promote**: new memories distilled from recurring feed lessons.
@@ -58,14 +58,14 @@ This skill rewrites shared team knowledge — the user vets the plan. If they na
 
 ## Step 5 — Execute
 
-- **Merges**: pick the best-established memory as the canonical one and `vibexp_io_update_memory` it with the combined, self-contained text; add provenance metadata such as `{"consolidated_from": ["<id>", ...]}`. Then archive the merged-away entries (`status: "archived"`).
+- **Merges**: pick the best-established memory as the canonical one and `vibexp_io_update_memory` it with the combined, self-contained text; add provenance metadata such as `{"consolidated_from": ["<id>", ...]}`. Then archive the merged-away entries (`status: "archived"`). Finally, if a `vibexp_io_link_resources` tool is available, record a `supersedes` edge from the canonical memory to each archived entry (both ends are memories) — the typed edge is the canonical consolidation trail, the metadata a fallback. No such tool → skip silently, never fail the merge over it.
 - **Corrections**: `vibexp_io_update_memory` with the fixed text — resolve the contradiction in the text itself, don't append both versions.
 - **Archivals**: `vibexp_io_update_memory` with `status: "archived"`. **Never use `vibexp_io_delete_resource`** — archived memories stay recoverable and out of search; deletion is not gardening.
 - **Promotions**: feed lessons → `vibexp_io_create_memory` (`status: "active"`) with metadata like `{"category": "lesson", "source": "feed"}`.
 
 ## Step 6 — Report
 
-Summarize what changed: N merged into M, N corrected, N archived, N created from feed lessons — each with a one-line reason, and the before/after active-memory count. If nothing needed consolidating, say so plainly; a clean report is a good outcome, not a failure.
+Summarize what changed: N merged into M, N corrected, N archived, N created from feed lessons, N `supersedes` edges recorded (created / already existed / skipped — tool unavailable) — each with a one-line reason, and the before/after active-memory count. If nothing needed consolidating, say so plainly; a clean report is a good outcome, not a failure.
 
 ## Conventions (apply throughout)
 
@@ -73,3 +73,4 @@ Summarize what changed: N merged into M, N corrected, N archived, N created from
 - Excerpts are for triage only; `vibexp_io_get_memory` before any edit.
 - Archive over delete, always. Every destructive-looking action must appear in the confirmed plan first.
 - The goal is fewer, better memories — if a merge would produce a bloated catch-all, keep the memories separate and sharpen each instead.
+- Typed edges (`vibexp_io_link_resources`): `governed-by` → object must be a blueprint; `built-from` → object must be a prompt; `explained-by` → object must be a memory; `supersedes` → both ends the same type. No self- or cross-project links; re-linking an existing edge is a safe no-op. Tool not available (older server) → skip linking silently, never fail the skill over it.

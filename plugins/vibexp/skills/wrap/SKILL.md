@@ -34,7 +34,7 @@ Review the whole session and collect candidates in three buckets:
 
 ## Step 3 — Propose, then get one confirmation
 
-Show the user a compact write-back plan — each memory candidate in one line, each artifact with its intended slug/type, and the feed post title — and ask for a single go/adjust confirmation before writing anything. This is a shared team knowledge base; the user vets what enters it. Skip the confirmation only if the user already told you to proceed without review.
+Show the user a compact write-back plan — each memory candidate in one line, each artifact with its intended slug/type, any typed edges to record for them (one line each, e.g. `artifact deploy-runbook —governed-by→ blueprint claude-md`; see Step 6), and the feed post title — and ask for a single go/adjust confirmation before writing anything. This is a shared team knowledge base; the user vets what enters it. Skip the confirmation only if the user already told you to proceed without review.
 
 ## Step 4 — Learnings → memories (dedup first, always)
 
@@ -53,7 +53,18 @@ For each reusable output:
 - Check for an existing artifact first: `vibexp_io_search_artifacts` in the project (search by intended slug/title). Exists → `vibexp_io_update_artifact` (the server snapshots the previous version automatically). New → `vibexp_io_create_artifact` with a stable kebab-case `slug`, clear `title`, `description`, and a `type` that matches the team's artifact types (defaults: `general`, `work-reports`, `static-contexts`; the team may define custom ones — when unsure use `general`).
 - Content is Markdown; keep individual artifacts under ~1 MB. Files (images, PDFs, etc.) can be attached with `vibexp_io_upload_attachment` (`owner_type: "artifact"`, max 5 MB/file, 10 MB/artifact) — note uploads fail with a clear error if the instance has no object storage configured; report that rather than retrying.
 
-## Step 6 — Status → feed
+## Step 6 — Link what you wrote (typed edges)
+
+If a `vibexp_io_link_resources` tool is available, record how each resource created or updated in Steps 4–5 relates to existing resources, so the team's knowledge graph maintains itself as a side effect of the wrap. Propose only edges that are clearly true:
+
+- `governed-by` — the memory/artifact follows a rule a specific blueprint states (the object must be a blueprint).
+- `supersedes` — a new artifact replaces a *different*, older artifact (both ends must be the same resource type; updating the same resource needs no edge — the server versions content on update).
+- `explained-by` — an artifact whose rationale lives in a memory (the object must be a memory).
+- `built-from` — an artifact a team prompt produced (the object must be a prompt).
+
+Call the tool with the project's `project_id` and each end's type + UUID — create/update responses and search/list results include IDs, so linking works even for blueprints and prompts, which have no `get_*` tool. These edges were part of the confirmed Step 3 plan; report each one's outcome in Step 8.
+
+## Step 7 — Status → feed
 
 1. `vibexp_io_list_feeds`, pick the topically right feed (or the general one).
 2. `vibexp_io_post_to_feed` with:
@@ -64,12 +75,13 @@ For each reusable output:
 
 Feeds are for status and summaries ("anything you'd otherwise put in chat"); polished reusable content belongs in artifacts — don't blur the two.
 
-## Step 7 — Report
+## Step 8 — Report
 
-Tell the user exactly what was written: each memory (created vs updated), each artifact, and the feed post — with their `full_url` links. If a quota/resource-limit error came back (feed posting is quota-gated), report it plainly instead of retrying.
+Tell the user exactly what was written: each memory (created vs updated), each artifact, each typed edge (created / already existed / skipped — tool unavailable), and the feed post — with their `full_url` links. If a quota/resource-limit error came back (feed posting is quota-gated), report it plainly instead of retrying.
 
 ## Conventions (apply throughout)
 
 - Every tool except `vibexp_io_get_user` and `vibexp_io_list_teams` requires `team_id` (UUID or slug).
 - Search/list tools return ~300-char excerpts; call `get_*` before updating anything so you edit the full text, not an excerpt.
 - Quality bar over quantity: two excellent memories beat ten noisy ones. When in doubt, leave it out.
+- Typed edges (`vibexp_io_link_resources`): `governed-by` → object must be a blueprint; `built-from` → object must be a prompt; `explained-by` → object must be a memory; `supersedes` → both ends the same type. No self- or cross-project links; re-linking an existing edge is a safe no-op. Tool not available (older server) → skip linking silently, never fail the skill over it.

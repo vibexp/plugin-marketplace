@@ -2,7 +2,7 @@
   "name": "vibexp",
   "displayName": "VibeXP",
   "description": "Best-practice skills for the VibeXP knowledge loop: prime your session with team knowledge before a task, wrap learnings and artifacts back after, consolidate memories over time, run feed-steered work streams, publish reusable prompts, and onboard new projects.",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "author": {
     "name": "VibeXP"
   },
