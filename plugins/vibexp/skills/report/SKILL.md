@@ -10,15 +10,9 @@ Feeds are how humans supervise agents asynchronously on VibeXP: the agent posts 
 
 Mode/context requested: $ARGUMENTS
 
-## Step 0 — Check the VibeXP MCP connection
+## Step 0 — Pick the VibeXP transport (CLI-first)
 
-VibeXP tools are named `vibexp_io_*` (prefixed with the user's MCP server alias — match on `vibexp_io_`, never assume an alias). If none are available, STOP and help the user connect:
-
-```
-claude mcp add --transport http vibexp https://<your-vibexp-host>/mcp/v1/common
-```
-
-(Hosted instance: `https://connect.vibexp.io/mcp/v1/common`; self-hosters use their own origin. OAuth in the browser, no API key. Docs: https://docs.vibexp.io)
+Follow **`${CLAUDE_PLUGIN_ROOT}/references/transport.md`**: probe with `command -v vibexp && vibexp whoami` — installed and authenticated → use the official CLI (feed posts/replies via `--body-file`, always `--author "Claude Code"`); otherwise use the `vibexp_io_*` MCP tools (match on `vibexp_io_`, never assume an alias). Neither available → STOP and help the user connect per that reference. Steps below name operations by MCP tool name; on the CLI transport use the mapped command.
 
 Resolve scope per **`${CLAUDE_PLUGIN_ROOT}/references/resolve-scope.md`** — cache → `list_teams` → `list_projects` matched on **`git_url`** → cache the result. The git URL decides; never assume a team or reuse another repo's.
 
@@ -54,6 +48,8 @@ Do this **before starting each major phase**, after posting a checkpoint, and wh
 2. Identify replies from humans that arrived since you last checked (compare `posted_at`; human replies have no or a different `ai_assistant_name` and a `posted_by_user_id`).
 3. **Human replies are course corrections, not suggestions.** Apply them with priority: adjust the plan, and acknowledge in-thread with a short reply confirming what you changed ("Got it — switching to the staged rollout you asked for"). If a reply conflicts with the original task, say so in the acknowledgment and follow the human's latest instruction.
 4. No new replies → continue as planned. Don't post a "no update" reply.
+
+A phase boundary is also the moment to **refresh context just-in-time**: if `/vibexp:prime` left a session ledger with a knowledge map (see `${CLAUDE_PLUGIN_ROOT}/references/session-ledger.md`), fetch the mapped resources relevant to the *upcoming* phase now — one `get` call each — and if the phase enters ground the map doesn't cover, run one targeted `vibexp_io_search` for it. Long-running work shouldn't run on only the context that was loaded at the start.
 
 ## Closing the loop
 

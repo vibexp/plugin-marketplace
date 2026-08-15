@@ -11,6 +11,10 @@ The official **Claude Code plugin marketplace for VibeXP** (https://vibexp.io �
 plugins/vibexp/                   The core plugin (currently the only one)
   .claude-plugin/plugin.json      Plugin manifest (name, version, metadata)
   skills/<skill>/SKILL.md         One directory per skill; invoked as /vibexp:<skill>
+  references/                     Shared procedures every skill references:
+                                  transport.md (CLI-first transport selection),
+                                  resolve-scope.md (team/project from git URL),
+                                  session-ledger.md (what prime pulled, for wrap's audit)
   README.md                       User-facing skill documentation
 ```
 
@@ -19,9 +23,11 @@ Skills (the VibeXP knowledge loop): `prime` (read team knowledge before a task),
 ## Design rules for skills — every skill must follow these
 
 - **Deployment-agnostic, public audience.** Never assume the hosted instance, a specific MCP server alias, or any particular team/project. Match VibeXP tools on the `vibexp_io_` name fragment; `https://connect.vibexp.io/mcp/v1/common` appears only as an *example* alongside `<your-vibexp-host>`.
-- **Connection preflight.** If no `vibexp_io_*` tools are available, the skill STOPS and walks the user through `claude mcp add --transport http vibexp https://<host>/mcp/v1/common` (OAuth in browser, no API key).
+- **Transport preflight (CLI-first).** Step 0 of every skill follows `references/transport.md`: probe `command -v vibexp && vibexp whoami` (exit 0 = installed + authenticated; `auth status` exits 0 even when logged out — don't use it) → use the official CLI; else the `vibexp_io_*` MCP tools; neither → STOP and walk the user through `vibexp auth login` or `claude mcp add --transport http vibexp https://<host>/mcp/v1/common` (OAuth in browser, no API key). Skill bodies name operations by MCP core name; the CLI mapping lives in transport.md. CLI `--team` takes the team UUID, not a slug.
+- **Token discipline.** Prime pulls only what the task needs now (capped fetches) and leaves a knowledge map for just-in-time retrieval; wrap merges into existing resources before creating; on the CLI, responses are trimmed with `--format json --jq`.
+- **Session ledger.** Prime records what it retrieved in a local `vibexp-last-prime.md` (`references/session-ledger.md`); wrap audits those resources for staleness and corrects them at the source; report's `check` mode uses the ledger's knowledge map at phase boundaries.
 - **Discovery flow.** `vibexp_io_list_teams` first (everything except `get_user`/`list_teams` needs `team_id`), then resolve the project by matching the git remote against project `git_url` (tolerate SSH/HTTPS forms, ignore `.git`), asking the user only when ambiguous.
-- **Excerpt-vs-get.** Search/list tools return ~300-char excerpts; skills must fetch full content via `get_*` before relying on or editing anything. Blueprints and prompts have no MCP get tool — work from excerpts and say so.
+- **Excerpt-vs-get.** Search/list tools return ~300-char excerpts; skills must fetch full content via `get_*` before relying on or editing anything. Blueprints and prompts have no MCP get tool — on the MCP transport, work from excerpts and say so; on the CLI, `vibexp blueprint get` / `vibexp prompt get` return full content.
 - **Write discipline.** One consolidated user confirmation before writing to shared team knowledge. Dedup-search before creating memories/prompts/blueprints; update existing resources rather than duplicating (the server versions content on update). Archive over delete — `vibexp_io_delete_resource` is never used by these skills.
 - **Draft status is human territory.** Skills never create or modify `draft` resources; agent knowledge is either good enough to be `active` or not saved.
 - **Feeds vs artifacts.** Status/progress goes to feeds with a stable `ai_assistant_name` (never random/timestamped); polished reusable outputs are artifacts, linked from feed posts.

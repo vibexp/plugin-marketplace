@@ -10,15 +10,9 @@ A prompt that worked once and vanished into scrollback is exactly the waste Vibe
 
 What to capture: $ARGUMENTS
 
-## Step 0 — Check the VibeXP MCP connection
+## Step 0 — Pick the VibeXP transport (CLI-first)
 
-VibeXP tools are named `vibexp_io_*` (prefixed with the user's MCP server alias — match on `vibexp_io_`, never assume an alias). If none are available, STOP and help the user connect:
-
-```
-claude mcp add --transport http vibexp https://<your-vibexp-host>/mcp/v1/common
-```
-
-(Hosted instance: `https://connect.vibexp.io/mcp/v1/common`; self-hosters use their own origin. OAuth in the browser, no API key. Docs: https://docs.vibexp.io)
+Follow **`${CLAUDE_PLUGIN_ROOT}/references/transport.md`**: probe with `command -v vibexp && vibexp whoami` — installed and authenticated → use the official CLI (note: `vibexp prompt get` reads full prompt content, which MCP cannot — use it in Step 2 before proposing an update); otherwise use the `vibexp_io_*` MCP tools (match on `vibexp_io_`, never assume an alias). Neither available → STOP and help the user connect per that reference. Steps below name operations by MCP tool name; on the CLI transport use the mapped command.
 
 Resolve scope per **`${CLAUDE_PLUGIN_ROOT}/references/resolve-scope.md`** — cache → `list_teams` → `list_projects` matched on **`git_url`** → cache the result. The git URL decides; never assume a team or reuse another repo's. Prompts require a `project_id`.
 
