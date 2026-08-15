@@ -24,8 +24,8 @@ claude mcp add --transport http vibexp https://<your-vibexp-host>/mcp/v1/common
 
 ## Step 1 — Resolve team and project
 
-1. `vibexp_io_list_teams` (one → use it; several → ask once).
-2. `vibexp_io_list_projects`, match the git remote against `git_url` (ignore `.git`; SSH and HTTPS forms are equal) or the argument above.
+1. Resolve scope per **`${CLAUDE_PLUGIN_ROOT}/references/resolve-scope.md`** — cache → `list_teams` → `list_projects` matched on **`git_url`** → cache the result. The git URL decides; never assume a team or reuse another repo's.
+2. A project named in **Target project** above overrides the match.
 3. **No matching project?** Projects cannot be created over MCP. Tell the user to create it in the VibeXP web app (New Project — set the `git_url` to this repo so future auto-detection works; the GitHub import option can also bring in AI config automatically, which overlaps with Step 2 — if they use it, this skill's blueprint import becomes a dedup pass rather than a first import). Wait for them to confirm, then re-run `vibexp_io_list_projects`.
 
 ## Step 2 — Inventory the repo's AI configuration

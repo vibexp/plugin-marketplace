@@ -33,9 +33,9 @@ Use the task description from the arguments above, or infer it from the conversa
 
 ## Step 2 — Resolve team and project
 
-1. Call `vibexp_io_list_teams`. Exactly one team → use it. Multiple teams → pick the one whose projects match this repository (Step 2.2); if that is ambiguous, ask the user once and reuse the answer for the rest of the session.
-2. Call `vibexp_io_list_projects` (use `search` with the repository name to narrow; pages are max 10 items). Match the git remote URL against each project's `git_url` — compare loosely: ignore `.git` suffixes, and treat `git@host:owner/repo` and `https://host/owner/repo` as equal. Fall back to matching the directory name against project name/slug.
-3. No match → tell the user which projects exist and ask whether to use one of them or to search team-wide without a project filter. Never silently pick an unrelated project.
+Resolve scope per **`${CLAUDE_PLUGIN_ROOT}/references/resolve-scope.md`** — cache → `list_teams` → `list_projects` matched on **`git_url`** → cache the result. The git URL decides; never assume a team or reuse another repo's.
+
+No match → list what exists and ask (use one / search team-wide unfiltered). Never silently pick an unrelated project.
 
 ## Step 3 — Retrieve relevant knowledge
 
