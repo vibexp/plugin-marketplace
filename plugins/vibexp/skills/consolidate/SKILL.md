@@ -32,8 +32,8 @@ claude mcp add --transport http vibexp https://<your-vibexp-host>/mcp/v1/common
 
 ## Step 1 — Resolve scope
 
-1. Team: `list_teams` (one → use it; several → match this repo or ask once).
-2. Project: `list_projects`, match the git remote against `git_url` (ignore `.git`; SSH and HTTPS forms are equal) or the directory name — or use the project the user named in the arguments. Consolidation runs **one project at a time**; if the user wants the whole team, do it project by project and say so.
+1. Resolve scope per **`${CLAUDE_PLUGIN_ROOT}/references/resolve-scope.md`** — cache → `list_teams` → `list_projects` matched on **`git_url`** → cache the result. The git URL decides; never assume a team or reuse another repo's.
+2. A project the user named in the arguments overrides the match. Consolidation runs **one project at a time**; if the user wants the whole team, do it project by project and say so.
 
 ## Step 2 — Inventory memories AND artifacts
 

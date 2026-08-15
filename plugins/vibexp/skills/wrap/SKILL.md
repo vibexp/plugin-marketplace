@@ -22,7 +22,9 @@ claude mcp add --transport http vibexp https://<your-vibexp-host>/mcp/v1/common
 
 ## Step 1 — Resolve team and project
 
-If `/vibexp:prime` already resolved these this session, reuse them. Otherwise: `vibexp_io_list_teams` (one team → use it; several → match this repository or ask once), then `vibexp_io_list_projects` and match the git remote URL against `git_url` (ignore `.git`, treat SSH and HTTPS forms as equal) or the directory name against name/slug. The project is required for memories and artifacts; if none matches, ask before writing anywhere.
+Reuse what `/vibexp:prime` resolved this session; otherwise resolve scope per **`${CLAUDE_PLUGIN_ROOT}/references/resolve-scope.md`** — cache → `list_teams` → `list_projects` matched on **`git_url`** → cache the result. The git URL decides; never assume a team or reuse another repo's.
+
+The project is required for memories and artifacts — no match → ask before writing anywhere.
 
 ## Step 2 — Harvest the session
 

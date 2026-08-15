@@ -20,7 +20,7 @@ claude mcp add --transport http vibexp https://<your-vibexp-host>/mcp/v1/common
 
 (Hosted instance: `https://connect.vibexp.io/mcp/v1/common`; self-hosters use their own origin. OAuth in the browser, no API key. Docs: https://docs.vibexp.io)
 
-Resolve team and project: `vibexp_io_list_teams` (one → use it; several → match this repo or ask once), `vibexp_io_list_projects` matched against the git remote. Prompts require a `project_id`.
+Resolve scope per **`${CLAUDE_PLUGIN_ROOT}/references/resolve-scope.md`** — cache → `list_teams` → `list_projects` matched on **`git_url`** → cache the result. The git URL decides; never assume a team or reuse another repo's. Prompts require a `project_id`.
 
 ## Step 1 — Identify the source prompt
 

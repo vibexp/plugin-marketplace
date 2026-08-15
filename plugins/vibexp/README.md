@@ -10,7 +10,7 @@ Requires a VibeXP MCP connection (see the [marketplace README](../../README.md#p
 
 Run at the start of a substantial task. It:
 
-1. Detects your VibeXP project by matching the repo's git remote against your projects.
+1. Detects your VibeXP **team and project** by matching the repo's git remote against each project's `git_url` — across all your teams, since the owning team isn't guessable from the org name. The mapping is cached in project memory, so later sessions resolve in zero API calls. Shared by every skill here: [`references/resolve-scope.md`](references/resolve-scope.md).
 2. Semantically searches memories, blueprints, artifacts, and prompts for what's relevant to the task, and checks recent feed activity for work in flight.
 3. Fetches the full content of the top hits and presents a short context brief — rules to follow, relevant history, related work — then starts the task with that knowledge applied.
 
