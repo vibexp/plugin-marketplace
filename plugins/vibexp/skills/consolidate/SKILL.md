@@ -9,7 +9,7 @@ argument-hint: "[optional scope, e.g. a project name or 'auth memories only']"
 Memories and artifacts accumulate one session at a time; nobody re-reads the pile. Left alone, a project grows 30+ memories and 150+ artifacts — more than any agent can prime from, so the knowledge stops being used at all. Every active item is a standing tax on every future session: it competes for the context window, for search-result slots, and for the agent's attention. This skill is the maintenance pass that keeps the team's shared brain at a **reasonable size** — small, sharp, current, and token-efficient.
 
 **The target shape, per project:**
-- **Memories: ~5 canonical entries** (3–7 is healthy), each a dense, self-contained "brain section" — not 30 overlapping fragments. Organize by durable subsystem (e.g. backend conventions, frontend conventions, team workflow, cross-cutting lessons), not by task or date.
+- **Memories: ~5 canonical entries** (3–7 is healthy), each a dense, self-contained "brain section" — not 30 overlapping fragments. Organize by durable subsystem (e.g. backend conventions, frontend conventions, team workflow, cross-cutting lessons), not by task or date. The band scales with the project's surface — a large monorepo can justify more canonicals — but the invariant never changes: **the full canonical set must fit comfortably in one prime**.
 - **Artifacts: only durable direction documents** — PRDs, benchmark reports, audits, current design docs, and *digest* artifacts that compound a recurring artifact series. Repetitive same-series artifacts (per-task logs, session reports, changelogs — whatever the team's recurring output is) should not stay active indefinitely: they get digested, then archived.
 
 **The keep test — apply it to every single item:** would a future AI agentic session actually reach for this? Keep only what is durable, reusable, and current: conventions, decisions with their *why*, hard-won lessons, living specs and designs. Archive everything else — one-off task state, completed-work logs, superseded plans, trivia. When in doubt, archive: archived items stay recoverable, while a bloated brain helps no one.
@@ -20,24 +20,23 @@ Scope requested by the user (may be empty — consolidate the current project): 
 
 Git remote for project detection: !`git remote get-url origin 2>/dev/null || echo "(no git remote)"`
 
-## Step 0 — Check the VibeXP MCP connection
+## Step 0 — Pick the VibeXP transport (CLI-first)
 
-VibeXP tool names share a stable **core name** (`list_teams`, `list_projects`, `list_resources`, `get_resource`, `search`, `create_memory`, `update_memory`, `create_artifact`, `update_artifact`, …) but the full tool name is prefixed per installation (the MCP server alias, e.g. `mcp__<alias>__vibexp_io_list_resources`). **Match tools on their core name, never on the prefix** — this skill refers to tools by core name throughout. If no VibeXP tools are available at all, STOP and help the user connect:
-
-```
-claude mcp add --transport http vibexp https://<your-vibexp-host>/mcp/v1/common
-```
-
-(Hosted instance: `https://connect.vibexp.io/mcp/v1/common`; self-hosters use their own origin. OAuth in the browser, no API key. Docs: https://docs.vibexp.io)
+Follow **`${CLAUDE_PLUGIN_ROOT}/references/transport.md`**: probe with `command -v vibexp && vibexp whoami` — installed and authenticated → use the official CLI (a big win for this skill: `--format json --jq` trims the inventory pages to just id/slug/title/status at the source); otherwise use the `vibexp_io_*` MCP tools (match on the `vibexp_io_` fragment / core name, never a specific alias). Neither available → STOP and help the user connect per that reference. Steps below name operations by MCP core name; on the CLI transport use the mapped command.
 
 ## Step 1 — Resolve scope
 
 1. Resolve scope per **`${CLAUDE_PLUGIN_ROOT}/references/resolve-scope.md`** — cache → `list_teams` → `list_projects` matched on **`git_url`** → cache the result. The git URL decides; never assume a team or reuse another repo's.
 2. A project the user named in the arguments overrides the match. Consolidation runs **one project at a time**; if the user wants the whole team, do it project by project and say so.
 
-## Step 2 — Inventory memories AND artifacts
+## Step 2 — Health check, then inventory at the right depth
 
-Page through `list_resources` for the project with `status: "active"`, 10 per page, for **both** `resource_type: "memory"` and `resource_type: "artifact"`. (On older servers without `list_resources`, fall back to `search_memories` for the memory pass.) Iterate until `total_pages` is exhausted — the totals tell you the size of the problem (e.g. 30 memories / 178 artifacts means real compaction, not a tidy-up).
+**Read the state before choosing the effort.** One page-1 `list_resources` call each for active memories and artifacts gives `total_count` and the most recent items. Pick the pass depth from it:
+
+- **Near the target shape** (memories within ~2× the canonical band, no visible series pile-up) → **triage pass**: verify the canonicals are still current, fold newly accumulated series items into the latest digest, and stop — report that the base is healthy. Don't run the full machinery on a tidy base.
+- **Past it** → **deep pass**: the full inventory and treatment below.
+
+For the deep pass, page through `list_resources` for the project with `status: "active"`, 10 per page, for **both** `resource_type: "memory"` and `resource_type: "artifact"`. (On older servers without `list_resources`, fall back to `search_memories` for the memory pass.) Iterate until `total_pages` is exhausted — the totals tell you the size of the problem (e.g. 30 memories / 178 artifacts means real compaction, not a tidy-up).
 
 **Enumerate every page BEFORE acting.** `total_count` and page boundaries shift as you archive, so paginating and archiving at the same time silently skips or double-processes items. Build the full id/slug list first, then work from that fixed list.
 
@@ -52,7 +51,7 @@ For very large sets (over ~60 memories), work the most recently updated pages fi
 Group the inventory by topic and look for these problem classes:
 
 1. **Near-duplicates / overlaps** — multiple memories about the same fact or convention. Confirm suspected clusters by running `search` (project-scoped; `types: ["memories"]` where supported) with the cluster's key terms and checking which entries rank together.
-2. **Stale, obsolete, or contradicted** — memories/artifacts that disagree with each other or with the project's current state, or that simply no longer matter. **Cross-check against reality, not just against other entries:** when running inside the repo, grep the code for named files/flags/commands; check the issue tracker for named epics. Classic stale shapes:
+2. **Stale, obsolete, or contradicted** — memories/artifacts that disagree with each other or with the project's current state, or that simply no longer matter. Work this class **oldest-untouched first**: sort by `updated_at` — an entry nothing has touched in months is where rot concentrates, while recently updated entries have effectively been re-verified by the sessions that touched them. **Cross-check against reality, not just against other entries:** when running inside the repo, grep the code for named files/flags/commands; check the issue tracker for named epics. Classic stale shapes:
    - Task-state memories ("IN PROGRESS", "next step: X") — task state rots within days; durable knowledge is what survives.
    - **Obsolete** — factually fine but no longer relevant: a decision later reversed, a tool or integration since removed, a plan fully executed with nothing reusable left in it.
    - Documents for an **abandoned direction** (a feasibility study or design for something the team decided against).

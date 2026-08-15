@@ -8,7 +8,15 @@ These plugins encode VibeXP best practices as installable skills, built around t
 
 ## Prerequisites
 
-A VibeXP instance connected to Claude Code over MCP (OAuth in the browser, no API key):
+A way to reach your VibeXP instance — either works; the skills prefer the CLI when both are present (leaner on context tokens, and it can read full blueprint/prompt content):
+
+**Official CLI** — install it, then authenticate:
+
+```sh
+vibexp auth login
+```
+
+**MCP** — connect Claude Code over MCP (OAuth in the browser, no API key):
 
 ```sh
 claude mcp add --transport http vibexp https://<your-vibexp-host>/mcp/v1/common
@@ -34,10 +42,10 @@ Then inside Claude Code:
 
 | Skill | What it does |
 |---|---|
-| `/vibexp:prime` | Start a task with your team's knowledge: retrieves the relevant memories, blueprints, artifacts, and recent feed activity for the current project (auto-detected from your git remote) and briefs you before working. |
-| `/vibexp:wrap` | End a session by writing back: durable learnings saved as memories (deduplicated against existing ones), polished outputs saved as versioned artifacts, typed relations recorded between what was written and existing resources (where the server supports linking), and a status update posted to your team feed. |
-| `/vibexp:consolidate` | Garden the knowledge base: merge near-duplicate active memories, correct or archive stale and contradicted ones, and promote recurring feed lessons into durable memory — merges leave a `supersedes` trail where the server supports linking. |
-| `/vibexp:report` | Run long or autonomous work as a steerable feed thread: post the plan, reply at milestones, and check the thread for human replies before each phase — treating them as course corrections. |
+| `/vibexp:prime` | Start a task with your team's knowledge: retrieves only the slice relevant to the task for the current project (auto-detected from your git remote) — full content for what the work needs now, a knowledge map for just-in-time fetching later — and briefs you before working. |
+| `/vibexp:wrap` | End a session by writing back: audits the knowledge the session primed with and corrects what went stale, saves durable learnings merge-first (existing memories updated over new ones created), extends living artifacts, syncs team-relevant local knowledge changes, records typed relations (where the server supports linking), posts a feed update — and recommends `/vibexp:consolidate` when the base has outgrown its target shape. |
+| `/vibexp:consolidate` | Garden the knowledge base with effort matched to its state: a cheap triage pass when it's healthy, a deep pass when it's not — compacting memories into canonicals, digesting artifact piles, correcting or archiving stale entries (oldest-untouched first), and promoting recurring feed lessons — merges leave a `supersedes` trail where the server supports linking. |
+| `/vibexp:report` | Run long or autonomous work as a steerable feed thread: post the plan, reply at milestones, and before each phase check the thread for human course corrections and refresh context just-in-time from prime's knowledge map. |
 | `/vibexp:promptify` | Turn a prompt that worked into a team asset: generalize it with `{{variables}}`, factor boilerplate into `@slug` base prompts, and publish it — optionally MCP-exposed as a native slash command in every teammate's tool, linked `governed-by` applicable blueprints where the server supports linking. |
 | `/vibexp:onboard` | Bootstrap a new project's knowledge base: import the repo's AI config (CLAUDE.md, .cursorrules, AGENTS.md, …) as blueprints and seed a few high-value memories, deduplicating against anything already there and linking seed memories to the blueprints that state their rules where supported. |
 

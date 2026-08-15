@@ -1,12 +1,12 @@
 ---
 name: prime
-description: Prime this session with your team's knowledge from VibeXP before starting a task. Retrieves the relevant memories, blueprints (standing rules), artifacts, and recent team activity for the current project over the VibeXP MCP, so work starts with everything the team already learned instead of from scratch. Use at the start of any substantial task, when the user says "prime", "load context", "what do we know about this", or before working in a project that has a VibeXP knowledge base.
+description: Prime this session with your team's knowledge from VibeXP before starting a task. Retrieves only the slice relevant to the task — full content for what the work needs now, a knowledge map for just-in-time fetching later — so work starts with everything the team already learned without flooding the context. Use at the start of any substantial task, when the user says "prime", "load context", "what do we know about this", or before working in a project that has a VibeXP knowledge base.
 argument-hint: "[task description]"
 ---
 
 # Prime: start with what your team already knows
 
-Retrieve the relevant slice of the team's VibeXP knowledge base and apply it to the task at hand. The goal is a short, high-signal context brief — not a dump of everything stored.
+Retrieve the relevant slice of the team's VibeXP knowledge base and apply it to the task at hand. The goal is a short, high-signal context brief — not a dump of everything stored. Every token pulled that the task doesn't need actively hurts: it competes with the task for the context window. Pull what the work needs *now*; index the rest for just-in-time retrieval.
 
 Context for project detection (may be empty if this is not a git repository):
 
@@ -15,21 +15,18 @@ Directory: !`basename "$(pwd)"`
 
 Task provided by the user: $ARGUMENTS
 
-## Step 0 — Check the VibeXP MCP connection
+## Step 0 — Pick the VibeXP transport (CLI-first)
 
-All VibeXP tools are named `vibexp_io_*` (the full tool name is prefixed with the MCP server alias the user chose, e.g. `mcp__vibexp__vibexp_io_list_teams` — match on the `vibexp_io_` part, never assume a specific alias).
+Follow **`${CLAUDE_PLUGIN_ROOT}/references/transport.md`**: probe with `command -v vibexp && vibexp whoami` — installed and authenticated → use the official CLI (token-cheaper; trim responses with `--format json --jq`); otherwise use the `vibexp_io_*` MCP tools (match on the `vibexp_io_` fragment, never assume an alias). Neither available → STOP and help the user connect per that reference. Steps below name operations by MCP core name; on the CLI transport use the mapped command.
 
-If no `vibexp_io_*` tools are available in this session, STOP and help the user connect instead of guessing:
-
-```
-claude mcp add --transport http vibexp https://<your-vibexp-host>/mcp/v1/common
-```
-
-For the hosted instance the URL is `https://connect.vibexp.io/mcp/v1/common`; self-hosters use their own deployment's origin. Authentication is OAuth in the browser on first use — no API key. Full instructions: https://docs.vibexp.io — then ask the user to restart the session or run `/mcp` to authenticate, and re-run this skill.
-
-## Step 1 — Establish the task
+## Step 1 — Establish the task and pick the retrieval tier
 
 Use the task description from the arguments above, or infer it from the conversation. If there is no specific task, prime for general project context instead: conventions, architecture decisions, and current work in flight.
+
+Then size the retrieval to the task:
+
+- **Focused** (one bug, one small change, one question) → *light tier*: 1 targeted search query, no feed scan, fetch at most 1–2 items in full.
+- **Substantial** (a feature, a refactor, multi-phase or long-running work) → *full tier*: Steps 3–4 as written.
 
 ## Step 2 — Resolve team and project
 
@@ -39,7 +36,7 @@ No match → list what exists and ask (use one / search team-wide unfiltered). N
 
 ## Step 3 — Retrieve relevant knowledge
 
-Run `vibexp_io_search` (semantic, cross-entity) with 2–3 complementary queries, passing `project_id` when resolved:
+Run `search` (semantic, cross-entity) scoped to the project. Light tier: just query 1. Full tier: 2–3 complementary queries:
 
 1. The task description itself.
 2. Conventions/rules angle: e.g. "coding standards, conventions, and rules for <project or area>".
@@ -47,31 +44,41 @@ Run `vibexp_io_search` (semantic, cross-entity) with 2–3 complementary queries
 
 Results are relevance-ranked with a `score` in [0,1] and are excerpts only. Collect the hits, dedupe by `id`, and keep the genuinely relevant ones (roughly: score ≥ 0.5, or the top 5–8 overall).
 
-Also glance at recent team activity so you don't duplicate or collide with work in flight: `vibexp_io_list_feeds`, then `vibexp_io_list_feed_items` on the most relevant feed (first page is enough; full content via `vibexp_io_get_feed_item` only if an item is clearly about this task).
+Scan the feed **only when collision is plausible** — the task could overlap work in flight (a shared area, an active team, a long-running change). Then: `list_feeds` → `list_feed_items` on the most relevant feed (first page is enough; full content via `get_feed_item` only if an item is clearly about this task). A solo repo or an isolated fix doesn't need the scan.
 
-## Step 4 — Fetch full content for the top hits
+## Step 4 — Fetch full content for what the task needs *now*
 
-Search returns ~300-char excerpts; always fetch the full text of what you intend to rely on:
+Search returns ~300-char excerpts; fetch the full text of what the task will rely on immediately — **at most 3–5 fetches** (light tier: 1–2). Everything else relevant goes on the knowledge map (Step 5), not into the context.
 
-- `memory` results → `vibexp_io_get_memory`
-- `artifact` results → `vibexp_io_get_artifact` (needs `project_id` + `slug` from the result)
-- `blueprint` and `prompt` results have **no MCP get tool** — work from the search excerpts, and if a blueprint looks central, run one more targeted `vibexp_io_search` using its title to surface additional chunks of it.
+- `memory` results → get by `id`; `artifact` results → get by `slug`.
+- `blueprint` and `prompt` results: on the **CLI transport**, fetch in full (`vibexp blueprint get <slug>` / `vibexp prompt get <slug>`). Over **MCP** there is no get tool — work from the excerpts, and if a blueprint looks central, run one more targeted `search` using its title to surface additional chunks of it.
 
-Skip low-value fetches; every fetch should earn its place in the brief.
+Skip low-value fetches; every fetch must earn its place in the brief.
 
-## Step 5 — Brief, then work
+## Step 5 — Brief + knowledge map, then work
 
-Present a short context brief to the user before starting the task:
+Present a short context brief — a *distillation*, never pasted resource bodies:
 
 - **Rules to follow** — from blueprints/memories (conventions, constraints).
 - **Relevant history** — decisions and gotchas that change how the task should be done.
 - **Related work** — artifacts or recent feed activity to build on rather than redo.
+- **Knowledge map** — the relevant hits *not* fetched: one line each (type, id/slug, title, why it might matter later).
 
-Then do the task, actually applying what was retrieved. If retrieval found nothing relevant, say so plainly — the project's knowledge base may be cold — and recommend running `/vibexp:wrap` at the end of the session so the next prime has something to find.
+Then do the task, applying what was retrieved — and pull the rest **just-in-time**:
+
+- When work enters an area on the knowledge map, fetch that resource *then* — one `get` call, no new search.
+- On long multi-phase work, when a phase touches ground the brief didn't cover, run one targeted `search` for that phase instead of having front-loaded everything. (`/vibexp:report`'s `check` mode does this at each phase boundary.)
+
+If retrieval found nothing relevant, say so plainly — the project's knowledge base may be cold — and recommend running `/vibexp:wrap` at the end of the session so the next prime has something to find.
+
+## Step 6 — Write the session ledger
+
+Record what this prime did per **`${CLAUDE_PLUGIN_ROOT}/references/session-ledger.md`**: overwrite `vibexp-last-prime.md` with the date, task, transport, resolved ids, the resources fetched in full (*Relied on*), the knowledge map, and the queries run. `/vibexp:wrap` audits this for staleness at session end. Unwritable → continue without it, never fail the skill.
 
 ## Conventions (apply throughout)
 
-- Every tool except `vibexp_io_get_user` and `vibexp_io_list_teams` requires `team_id` (UUID or slug).
-- List/search tools return excerpts or truncated text by design; `get_*` tools return full content. Don't treat an excerpt as the whole document.
-- List endpoints cap at 10 items per page; `vibexp_io_search` allows `limit` up to 100 (default 10).
-- Read-only skill: prime never creates, updates, or deletes anything in VibeXP.
+- Every operation except `get_user` and `list_teams` requires `team_id` (UUID or slug).
+- List/search return excerpts or truncated text by design; `get` returns full content. Don't treat an excerpt as the whole document.
+- List endpoints cap at 10 items per page; `search` allows `limit` up to 100 (default 10).
+- Token budget: the brief should be a small fraction of the context window. When in doubt between fetching and mapping, map — the knowledge map makes deferred context one call away.
+- Read-only skill: prime never creates, updates, or deletes anything in VibeXP (the local session ledger is the only thing it writes).

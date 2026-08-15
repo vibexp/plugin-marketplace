@@ -12,15 +12,9 @@ Target project (may be empty — auto-detect): $ARGUMENTS
 
 Git remote: !`git remote get-url origin 2>/dev/null || echo "(no git remote)"`
 
-## Step 0 — Check the VibeXP MCP connection
+## Step 0 — Pick the VibeXP transport (CLI-first)
 
-VibeXP tools are named `vibexp_io_*` (prefixed with the user's MCP server alias — match on `vibexp_io_`, never assume an alias). If none are available, STOP and help the user connect:
-
-```
-claude mcp add --transport http vibexp https://<your-vibexp-host>/mcp/v1/common
-```
-
-(Hosted instance: `https://connect.vibexp.io/mcp/v1/common`; self-hosters use their own origin. OAuth in the browser, no API key. Docs: https://docs.vibexp.io)
+Follow **`${CLAUDE_PLUGIN_ROOT}/references/transport.md`**: probe with `command -v vibexp && vibexp whoami` — installed and authenticated → use the official CLI (note: `vibexp blueprint get` reads full blueprint content, which MCP cannot — it makes the Step 3 dedup much sharper); otherwise use the `vibexp_io_*` MCP tools (match on `vibexp_io_`, never assume an alias). Neither available → STOP and help the user connect per that reference. Steps below name operations by MCP tool name; on the CLI transport use the mapped command.
 
 ## Step 1 — Resolve team and project
 
