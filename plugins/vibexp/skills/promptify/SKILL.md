@@ -14,7 +14,7 @@ What to capture: $ARGUMENTS
 
 Follow **`${CLAUDE_PLUGIN_ROOT}/references/transport.md`**: probe with `command -v vibexp && vibexp whoami` — installed and authenticated → use the official CLI (note: `vibexp prompt get` reads full prompt content, which MCP cannot — use it in Step 2 before proposing an update); otherwise use the `vibexp_io_*` MCP tools (match on `vibexp_io_`, never assume an alias). Neither available → STOP and help the user connect per that reference. Steps below name operations by MCP tool name; on the CLI transport use the mapped command.
 
-Resolve scope per **`${CLAUDE_PLUGIN_ROOT}/references/resolve-scope.md`** — cache → `list_teams` → `list_projects` matched on **`git_url`** → cache the result. The git URL decides; never assume a team or reuse another repo's. Prompts require a `project_id`.
+Resolve scope per **`${CLAUDE_PLUGIN_ROOT}/references/resolve-scope.md`** — cache → `list_teams_and_projects` queried by **`git_url`** → cache the result. The git URL decides; never assume a team or reuse another repo's. Prompts require a `project_id`.
 
 ## Step 1 — Identify the source prompt
 
@@ -56,7 +56,7 @@ Confirm what was created or updated: name, slug, status, whether MCP-exposed, an
 
 ## Conventions (apply throughout)
 
-- Every tool except `vibexp_io_get_user` and `vibexp_io_list_teams` requires `team_id` (UUID or slug).
+- Every tool except `vibexp_io_get_user` and `vibexp_io_list_teams_and_projects` requires `team_id` (UUID or slug).
 - Slugs are identity: pick them like API names — stable, descriptive, kebab-case. Renaming a slug later breaks `@` references to it.
 - Improve existing prompts over creating variants; the library compounds by getting sharper, not longer.
 - Typed edges (`vibexp_io_link_resources`): `governed-by` → object must be a blueprint; `built-from` → object must be a prompt; `explained-by` → object must be a memory; `supersedes` → both ends the same type. No self- or cross-project links; re-linking an existing edge is a safe no-op. Tool not available (older server) → skip linking silently, never fail the skill over it.

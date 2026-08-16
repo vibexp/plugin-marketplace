@@ -18,9 +18,9 @@ Follow **`${CLAUDE_PLUGIN_ROOT}/references/transport.md`**: probe with `command 
 
 ## Step 1 — Resolve team and project
 
-1. Resolve scope per **`${CLAUDE_PLUGIN_ROOT}/references/resolve-scope.md`** — cache → `list_teams` → `list_projects` matched on **`git_url`** → cache the result. The git URL decides; never assume a team or reuse another repo's.
+1. Resolve scope per **`${CLAUDE_PLUGIN_ROOT}/references/resolve-scope.md`** — cache → `list_teams_and_projects` queried by **`git_url`** → cache the result. The git URL decides; never assume a team or reuse another repo's.
 2. A project named in **Target project** above overrides the match.
-3. **No matching project?** Projects cannot be created over MCP. Tell the user to create it in the VibeXP web app (New Project — set the `git_url` to this repo so future auto-detection works; the GitHub import option can also bring in AI config automatically, which overlaps with Step 2 — if they use it, this skill's blueprint import becomes a dedup pass rather than a first import). Wait for them to confirm, then re-run `vibexp_io_list_projects`.
+3. **No matching project?** Projects cannot be created over MCP. Tell the user to create it in the VibeXP web app (New Project — set the `git_url` to this repo so future auto-detection works; the GitHub import option can also bring in AI config automatically, which overlaps with Step 2 — if they use it, this skill's blueprint import becomes a dedup pass rather than a first import). Wait for them to confirm, then re-run the scope resolve.
 
 ## Step 2 — Inventory the repo's AI configuration
 
@@ -66,7 +66,7 @@ Summarize what was imported (blueprints with slugs, memories created, typed edge
 
 ## Conventions (apply throughout)
 
-- Every tool except `vibexp_io_get_user` and `vibexp_io_list_teams` requires `team_id` (UUID or slug).
+- Every tool except `vibexp_io_get_user` and `vibexp_io_list_teams_and_projects` requires `team_id` (UUID or slug).
 - Import instructions verbatim; distill knowledge selectively. Blueprints mirror the repo's config files; memories add what's written nowhere.
 - Never import secrets: if a config file embeds tokens, keys, or internal URLs that shouldn't be team-visible, flag the lines and exclude them from the imported blueprint.
 - Typed edges (`vibexp_io_link_resources`): `governed-by` → object must be a blueprint; `built-from` → object must be a prompt; `explained-by` → object must be a memory; `supersedes` → both ends the same type. No self- or cross-project links; re-linking an existing edge is a safe no-op. Tool not available (older server) → skip linking silently, never fail the skill over it.

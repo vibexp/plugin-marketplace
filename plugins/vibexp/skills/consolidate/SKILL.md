@@ -26,7 +26,7 @@ Follow **`${CLAUDE_PLUGIN_ROOT}/references/transport.md`**: probe with `command 
 
 ## Step 1 — Resolve scope
 
-1. Resolve scope per **`${CLAUDE_PLUGIN_ROOT}/references/resolve-scope.md`** — cache → `list_teams` → `list_projects` matched on **`git_url`** → cache the result. The git URL decides; never assume a team or reuse another repo's.
+1. Resolve scope per **`${CLAUDE_PLUGIN_ROOT}/references/resolve-scope.md`** — cache → `list_teams_and_projects` queried by **`git_url`** → cache the result. The git URL decides; never assume a team or reuse another repo's.
 2. A project the user named in the arguments overrides the match. Consolidation runs **one project at a time**; if the user wants the whole team, do it project by project and say so.
 
 ## Step 2 — Health check, then inventory at the right depth
@@ -36,7 +36,7 @@ Follow **`${CLAUDE_PLUGIN_ROOT}/references/transport.md`**: probe with `command 
 - **Near the target shape** (memories within ~2× the canonical band, no visible series pile-up) → **triage pass**: verify the canonicals are still current, fold newly accumulated series items into the latest digest, and stop — report that the base is healthy. Don't run the full machinery on a tidy base.
 - **Past it** → **deep pass**: the full inventory and treatment below.
 
-For the deep pass, page through `list_resources` for the project with `status: "active"`, 10 per page, for **both** `resource_type: "memory"` and `resource_type: "artifact"`. (On older servers without `list_resources`, fall back to `search_memories` for the memory pass.) Iterate until `total_pages` is exhausted — the totals tell you the size of the problem (e.g. 30 memories / 178 artifacts means real compaction, not a tidy-up).
+For the deep pass, page through `list_resources` for the project with `status: "active"`, 10 per page, for **both** `resource_type: "memory"` and `resource_type: "artifact"`. Iterate until `total_pages` is exhausted — the totals tell you the size of the problem (e.g. 30 memories / 178 artifacts means real compaction, not a tidy-up).
 
 **Enumerate every page BEFORE acting.** `total_count` and page boundaries shift as you archive, so paginating and archiving at the same time silently skips or double-processes items. Build the full id/slug list first, then work from that fixed list.
 
@@ -60,7 +60,7 @@ Group the inventory by topic and look for these problem classes:
 3. **Artifact pile-up** — repetitive same-series artifacts (a team's recurring per-task output: per-issue/per-PR logs, session reports, experiment notes…) accumulate fastest. Whatever the series is called in this project, the treatment is the same: the generalizable lessons belong in a digest, the individual items get archived. One-off durable documents are not pile-up. Check existing digests too: **a digest's metadata can lie** — one may claim "the individual items are archived" when they are still active (or vice versa). Trust the listing, not the claim.
 4. **Unharvested feed lessons** — skim recent feed items (`list_feeds` → `list_feed_items`, first 1–2 pages; `get_feed_item` only when a title suggests a durable lesson). A lesson that keeps recurring in status posts but never made it into memory is a promotion candidate.
 
-Before deciding anything, fetch full content (`get_resource`; on older servers, `get_memory`) for every item involved in a merge, correction, or archival. Never act on an excerpt.
+Before deciding anything, fetch full content (`get_resource`) for every item involved in a merge, correction, or archival. Never act on an excerpt.
 
 ## Step 4 — Propose the gardening plan, get one confirmation
 
@@ -91,7 +91,7 @@ Summarize what changed: memories N → M active, artifacts N → M active; what 
 
 ## Conventions (apply throughout)
 
-- Every tool except `get_user` and `list_teams` requires `team_id` (UUID or slug).
+- Every tool except `get_user` and `list_teams_and_projects` requires `team_id` (UUID or slug).
 - Identifiers differ per resource type: memories are read/updated by `id`; artifacts and blueprints by `project_id` + `slug`.
 - Excerpts are for triage only; fetch full content before any edit.
 - Archive over delete, always. Every destructive-looking action must appear in the confirmed plan first.
