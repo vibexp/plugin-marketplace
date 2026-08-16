@@ -16,7 +16,7 @@ Follow **`${CLAUDE_PLUGIN_ROOT}/references/transport.md`**: probe with `command 
 
 ## Step 1 — Resolve team and project
 
-Reuse what `/vibexp:prime` resolved this session (the session ledger records it); otherwise resolve scope per **`${CLAUDE_PLUGIN_ROOT}/references/resolve-scope.md`** — cache → `list_teams` → `list_projects` matched on **`git_url`** → cache the result. The git URL decides; never assume a team or reuse another repo's.
+Reuse what `/vibexp:prime` resolved this session (the session ledger records it); otherwise resolve scope per **`${CLAUDE_PLUGIN_ROOT}/references/resolve-scope.md`** — cache → `list_teams_and_projects` queried by **`git_url`** → cache the result. The git URL decides; never assume a team or reuse another repo's.
 
 The project is required for memories and artifacts — no match → ask before writing anywhere.
 
@@ -100,7 +100,7 @@ Then check the base's health cheaply — one `list_resources` page-1 call each f
 
 ## Conventions (apply throughout)
 
-- Every operation except `get_user` and `list_teams` requires `team_id` (UUID or slug; the CLI's `--team` takes the UUID).
+- Every operation except `get_user` and `list_teams_and_projects` requires `team_id` (UUID or slug; the CLI's `--team` takes the UUID).
 - Search/list return ~300-char excerpts; call `get` before updating anything so you edit the full text, not an excerpt.
 - Update over create; archive over delete; quality bar over quantity — two excellent memories beat ten noisy ones. When in doubt, leave it out.
 - Typed edges: `governed-by` → object must be a blueprint; `built-from` → object must be a prompt; `explained-by` → object must be a memory; `supersedes` → both ends the same type. No self- or cross-project links; re-linking an existing edge is a safe no-op. Operation not available (older server) → skip linking silently, never fail the skill over it.

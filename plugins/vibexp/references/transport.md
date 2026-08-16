@@ -36,8 +36,7 @@ Skills name operations by MCP core name; on the CLI transport use:
 
 | MCP core name | CLI |
 |---|---|
-| `list_teams` | `vibexp team list` |
-| `list_projects` | `vibexp project list --team <t>` |
+| `list_teams_and_projects` | `vibexp team list` · `vibexp project list --team <t>` (no merged command; see `resolve-scope.md`) |
 | `search` | `vibexp search "<q>" --team <t> --project <p> [--type memories\|artifacts\|blueprints\|prompts] [--limit N]` |
 | `get_resource` (memory) | `vibexp memory get <id> --team <t>` |
 | `get_resource` (artifact) | `vibexp artifact get <slug> --team <t> --project <p>` |
@@ -55,6 +54,13 @@ Skills name operations by MCP core name; on the CLI transport use:
 
 `vibexp <cmd> --help` is the ground truth for flags — never guess one. For
 anything unmapped, `vibexp api` calls any endpoint (last resort).
+
+**Deprecated MCP tools — never call these.** Server v0.11.0 merged `list_teams`
+and `list_projects` into `list_teams_and_projects`; the old two stay registered
+as aliases for one release only and will disappear. `search`/`get_resource`
+likewise superseded the per-type `search_memories` / `get_memory` /
+`get_artifact` tools, which are already gone. If a `vibexp_io_*` tool you expect
+is missing, check this list before working around it.
 
 ## CLI usage rules
 
@@ -79,6 +85,10 @@ anything unmapped, `vibexp api` calls any endpoint (last resort).
   CLI exposes `delete` subcommands; these skills never use them.
 - **Excerpt-vs-get still applies**: `search`/`list` return excerpts; run the
   `get` command before relying on or editing content.
+- **Memory bodies live under `text`, not `content`.** `vibexp memory get <id>
+  --team <uuid> --format json` returns keys `id, user_id, team_id, project_id,
+  text, status, metadata, created_at, updated_at, version, related, similar` —
+  `--jq '.content'` yields `null`. Use `--jq '.text'`.
 
 ## Per-call fallback
 

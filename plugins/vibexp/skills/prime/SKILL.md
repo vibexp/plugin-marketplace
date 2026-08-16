@@ -30,7 +30,7 @@ Then size the retrieval to the task:
 
 ## Step 2 — Resolve team and project
 
-Resolve scope per **`${CLAUDE_PLUGIN_ROOT}/references/resolve-scope.md`** — cache → `list_teams` → `list_projects` matched on **`git_url`** → cache the result. The git URL decides; never assume a team or reuse another repo's.
+Resolve scope per **`${CLAUDE_PLUGIN_ROOT}/references/resolve-scope.md`** — cache → `list_teams_and_projects` queried by **`git_url`** → cache the result. The git URL decides; never assume a team or reuse another repo's.
 
 No match → list what exists and ask (use one / search team-wide unfiltered). Never silently pick an unrelated project.
 
@@ -77,7 +77,7 @@ Record what this prime did per **`${CLAUDE_PLUGIN_ROOT}/references/session-ledge
 
 ## Conventions (apply throughout)
 
-- Every operation except `get_user` and `list_teams` requires `team_id` (UUID or slug).
+- Every operation except `get_user` and `list_teams_and_projects` requires `team_id` (UUID or slug).
 - List/search return excerpts or truncated text by design; `get` returns full content. Don't treat an excerpt as the whole document.
 - List endpoints cap at 10 items per page; `search` allows `limit` up to 100 (default 10).
 - Token budget: the brief should be a small fraction of the context window. When in doubt between fetching and mapping, map — the knowledge map makes deferred context one call away.

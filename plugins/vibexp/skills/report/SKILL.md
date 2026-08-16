@@ -14,7 +14,7 @@ Mode/context requested: $ARGUMENTS
 
 Follow **`${CLAUDE_PLUGIN_ROOT}/references/transport.md`**: probe with `command -v vibexp && vibexp whoami` — installed and authenticated → use the official CLI (feed posts/replies via `--body-file`, always `--author "Claude Code"`); otherwise use the `vibexp_io_*` MCP tools (match on `vibexp_io_`, never assume an alias). Neither available → STOP and help the user connect per that reference. Steps below name operations by MCP tool name; on the CLI transport use the mapped command.
 
-Resolve scope per **`${CLAUDE_PLUGIN_ROOT}/references/resolve-scope.md`** — cache → `list_teams` → `list_projects` matched on **`git_url`** → cache the result. The git URL decides; never assume a team or reuse another repo's.
+Resolve scope per **`${CLAUDE_PLUGIN_ROOT}/references/resolve-scope.md`** — cache → `list_teams_and_projects` queried by **`git_url`** → cache the result. The git URL decides; never assume a team or reuse another repo's.
 
 ## Mode: `start` — open the work thread
 
@@ -44,7 +44,7 @@ If the work produced a polished reusable output, save it as an artifact (see `/v
 
 Do this **before starting each major phase**, after posting a checkpoint, and whenever resuming after a pause:
 
-1. `vibexp_io_list_feed_item_replies` on the work stream's item (replies are truncated to ~300 chars by default; use `full_details: true`, or `vibexp_io_get_feed_item_reply` for a specific one).
+1. `vibexp_io_get_feed_item` on the work stream's item — it returns the item plus up to 50 replies at **full content** (`replies_truncated: true` means there are more). Use this, not `list_feed_items`: that lists a whole feed and its `include_replies` embeds only 3 reply *excerpts* per item. There is no per-reply get tool. On the CLI, `vibexp feed get-item <item-id>` prints the thread (human formats only — `--format json` returns just the item).
 2. Identify replies from humans that arrived since you last checked (compare `posted_at`; human replies have no or a different `ai_assistant_name` and a `posted_by_user_id`).
 3. **Human replies are course corrections, not suggestions.** Apply them with priority: adjust the plan, and acknowledge in-thread with a short reply confirming what you changed ("Got it — switching to the staged rollout you asked for"). If a reply conflicts with the original task, say so in the acknowledgment and follow the human's latest instruction.
 4. No new replies → continue as planned. Don't post a "no update" reply.
@@ -57,7 +57,7 @@ When the work stream finishes, post a final reply: outcome summary, links to art
 
 ## Conventions (apply throughout)
 
-- Every tool except `vibexp_io_get_user` and `vibexp_io_list_teams` requires `team_id` (UUID or slug).
+- Every tool except `vibexp_io_get_user` and `vibexp_io_list_teams_and_projects` requires `team_id` (UUID or slug).
 - Feeds are for status and steering — polished reusable outputs belong in artifacts, linked from the thread.
 - Feed posting is quota-gated on some instances; if a resource-limit error comes back, report it to the user plainly instead of retrying.
 - Frequency discipline: an update the human didn't need is noise. Plan → milestone → done is usually the right cadence.
