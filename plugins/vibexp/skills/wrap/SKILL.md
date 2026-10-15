@@ -12,7 +12,7 @@ Focus requested by the user (may be empty — do the full wrap): $ARGUMENTS
 
 ## Step 0 — Pick the VibeXP transport (CLI-first)
 
-Follow **`${CLAUDE_PLUGIN_ROOT}/references/transport.md`**: probe with `command -v vibexp && vibexp whoami` — installed and authenticated → use the official CLI (trim responses with `--format json --jq`; write bodies via `--body-file`); otherwise use the `vibexp_io_*` MCP tools (match on `vibexp_io_`, never assume an alias). Neither available → STOP and help the user connect per that reference. Steps below name operations by MCP core name; on the CLI transport use the mapped command.
+Follow **`${CLAUDE_PLUGIN_ROOT}/references/transport.md`**: probe with `command -v vibexp && vibexp whoami` — installed and authenticated → use the official CLI (trim responses with `--format json --jq`; write bodies via `--body-file`); otherwise use the `vibexp_io_*` MCP tools (match on `vibexp_io_`, never assume an alias). Neither available → STOP and offer to run `/vibexp:install` (guided CLI install + sign-in), or the MCP route, per that reference. Steps below name operations by MCP core name; on the CLI transport use the mapped command.
 
 ## Step 1 — Resolve team and project
 

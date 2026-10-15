@@ -2,9 +2,26 @@
 
 Best-practice skills for the [VibeXP](https://vibexp.io) knowledge loop: read your team's knowledge before working, write back what you learned after — so every session compounds.
 
-Requires a VibeXP connection — either the [official `vibexp` CLI](https://docs.vibexp.io) (installed + `vibexp auth login`) or an MCP connection (see the [marketplace README](../../README.md#prerequisites)). Every skill probes for the CLI first and uses it when authenticated — responses can be trimmed at the source (`--format json --jq`), so far fewer tokens enter the context, and the CLI can read full blueprint/prompt content, which MCP cannot — falling back to the MCP tools otherwise. Shared by every skill here: [`references/transport.md`](references/transport.md).
+Requires a VibeXP connection — either the [official `vibexp` CLI](https://github.com/vibexp/cli) (installed + signed in; **`/vibexp:install`** does both for you) or an MCP connection (see the [marketplace README](../../README.md#prerequisites)). Every skill probes for the CLI first and uses it when authenticated — responses can be trimmed at the source (`--format json --jq`), so far fewer tokens enter the context, and the CLI can read full blueprint/prompt content, which MCP cannot — falling back to the MCP tools otherwise. Shared by every skill here: [`references/transport.md`](references/transport.md).
 
 ## Skills
+
+### `/vibexp:install [your VibeXP URL]`
+
+Run once per machine (or per organization). It:
+
+1. Detects what's already set up and skips it — re-running is safe.
+2. Installs the CLI the right way for this machine (Homebrew, checksum-verified release binary, Windows zip, or `go install`), preferring a user-writable location so no `sudo` is needed.
+3. Asks for your organization's VibeXP URL (VibeXP is self-hosted — there is no default), verifies it via `/health`, and checks whether it offers OAuth.
+4. Creates a CLI context for the instance and signs you in with browser OAuth.
+5. When OAuth isn't possible (SSH/headless host, no OAuth server, REST not wired for browser tokens) it walks you through creating a CLI-scoped API key in the web app and gives you the exact `vibexp auth login --with-api-key` command to run in **your own terminal** — the key goes into a hidden prompt, never into the chat.
+6. Verifies end to end (`whoami`, server version, visible teams), optionally adds the MCP connection too, and points you at `/vibexp:onboard` or `/vibexp:prime`.
+
+Every other skill offers `/vibexp:install` when it finds no VibeXP connection.
+
+### `/vibexp:help [question]`
+
+Ask anything about using VibeXP. The agent looks the answer up instead of guessing: it picks the 1–3 relevant pages of the [official docs](https://vibexp.io/docs/) (read as raw Markdown), falls back to a grep of the full-text bundle (`llms-full.txt`) when the right page isn't obvious, uses `vibexp <cmd> --help` as the ground truth for CLI questions, and answers with steps adapted to your setup plus source links. If the docs don't cover something it says so rather than inventing an answer. Read-only.
 
 ### `/vibexp:prime [task description]`
 

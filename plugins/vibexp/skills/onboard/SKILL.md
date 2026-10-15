@@ -14,7 +14,7 @@ Git remote: !`git remote get-url origin 2>/dev/null || echo "(no git remote)"`
 
 ## Step 0 — Pick the VibeXP transport (CLI-first)
 
-Follow **`${CLAUDE_PLUGIN_ROOT}/references/transport.md`**: probe with `command -v vibexp && vibexp whoami` — installed and authenticated → use the official CLI (note: `vibexp blueprint get` reads full blueprint content, which MCP cannot — it makes the Step 3 dedup much sharper); otherwise use the `vibexp_io_*` MCP tools (match on `vibexp_io_`, never assume an alias). Neither available → STOP and help the user connect per that reference. Steps below name operations by MCP tool name; on the CLI transport use the mapped command.
+Follow **`${CLAUDE_PLUGIN_ROOT}/references/transport.md`**: probe with `command -v vibexp && vibexp whoami` — installed and authenticated → use the official CLI (note: `vibexp blueprint get` reads full blueprint content, which MCP cannot — it makes the Step 3 dedup much sharper); otherwise use the `vibexp_io_*` MCP tools (match on `vibexp_io_`, never assume an alias). Neither available → STOP and offer to run `/vibexp:install` (guided CLI install + sign-in), or the MCP route, per that reference. Steps below name operations by MCP core name; on the CLI transport use the mapped command.
 
 ## Step 1 — Resolve team and project
 
@@ -36,7 +36,7 @@ Also note the repo's self-description sources: `README.md`, `CONTRIBUTING.md`, `
 
 ## Step 3 — Dedup against what's already in VibeXP
 
-Before importing anything, check what exists: `vibexp_io_search` scoped to the project with `types: ["blueprints", "memories"]` using each candidate file's key topics (blueprints have no MCP get tool, so judge from excerpts and titles). Anything already imported — by a teammate, a previous run, or VibeXP's native GitHub import — is skipped or proposed as an update, never duplicated.
+Before importing anything, check what exists: `search` scoped to the project with `types: ["blueprints", "memories"]` using each candidate file's key topics (blueprints have no MCP get tool, so judge from excerpts and titles). Anything already imported — by a teammate, a previous run, or VibeXP's native GitHub import — is skipped or proposed as an update, never duplicated.
 
 ## Step 4 — Propose the onboarding plan, get one confirmation
 
@@ -44,15 +44,15 @@ Present a compact plan and confirm once before writing:
 
 - **Blueprints** — one per config file, e.g.: `CLAUDE.md` → slug `claude-md`, title "Claude Code instructions", metadata `{"tool": "claude-code", "source_path": "CLAUDE.md"}`. Content imported as-is (these files are already written as AI instructions — don't rewrite them), `type: "general"`, `status: "active"`.
 - **Seed memories** — a *small* set (typically 2–4) of durable, high-value facts distilled from the repo, each self-contained: an architecture overview (what the system is, its main components, how they talk), the dev workflow (build/test/run commands that actually work), and any conventions you observed in the code that no config file states. Skip anything a config-file blueprint already covers — memory is for knowledge, not copies.
-- **Typed edges** (only when a `vibexp_io_link_resources` tool is available — otherwise omit this section from the plan): each seed memory `governed-by` the imported blueprint that states the rule it distills (only when a specific blueprint really states it); a new blueprint that replaces a *different* existing one → `supersedes`. Updating the same blueprint needs no edge — the server versions content, and self-links are rejected.
+- **Typed edges** (only when a `link_resources` tool is available — otherwise omit this section from the plan): each seed memory `governed-by` the imported blueprint that states the rule it distills (only when a specific blueprint really states it); a new blueprint that replaces a *different* existing one → `supersedes`. Updating the same blueprint needs no edge — the server versions content, and self-links are rejected.
 
 Quality bar over completeness: onboarding should leave the knowledge base *worth priming from*, not stuffed.
 
 ## Step 5 — Execute
 
-- Blueprints: `vibexp_io_create_blueprint` (or `vibexp_io_update_blueprint` for agreed updates — located by `project_id` + `slug`).
-- Memories: `vibexp_io_create_memory` with `status: "active"` and metadata like `{"category": "architecture", "source": "onboarding"}`.
-- Edges: after the writes, record the planned links via `vibexp_io_link_resources` (the project's `project_id`, each end's type + UUID from the create/update responses). No such tool on this server → skip silently, never fail the onboarding over it.
+- Blueprints: `create_blueprint` (or `update_blueprint` for agreed updates — located by `project_id` + `slug`).
+- Memories: `create_memory` with `status: "active"` and metadata like `{"category": "architecture", "source": "onboarding"}`.
+- Edges: after the writes, record the planned links via `link_resources` (the project's `project_id`, each end's type + UUID from the create/update responses). No such tool on this server → skip silently, never fail the onboarding over it.
 
 ## Step 6 — Report and hand off to the loop
 
@@ -62,11 +62,11 @@ Summarize what was imported (blueprints with slugs, memories created, typed edge
 - `/vibexp:wrap` at the end of sessions — the base grows from real work.
 - `/vibexp:consolidate` periodically — the base stays sharp.
 
-**Keep sources in sync:** the imported blueprints are snapshots. When `CLAUDE.md` (or another source file) changes meaningfully in the repo, update the corresponding blueprint (`vibexp_io_update_blueprint` — the server keeps version history), or re-run this skill for a dedup-aware refresh.
+**Keep sources in sync:** the imported blueprints are snapshots. When `CLAUDE.md` (or another source file) changes meaningfully in the repo, update the corresponding blueprint (`update_blueprint` — the server keeps version history), or re-run this skill for a dedup-aware refresh. A source file removed from the repo → set its blueprint's status to `expired` (blueprints retire via `expired`; they have no `archived` status — never delete).
 
 ## Conventions (apply throughout)
 
-- Every tool except `vibexp_io_get_user` and `vibexp_io_list_teams_and_projects` requires `team_id` (UUID or slug).
+- Every operation except `get_user` and `list_teams_and_projects` requires `team_id` (UUID or slug; the CLI's `--team` takes the UUID).
 - Import instructions verbatim; distill knowledge selectively. Blueprints mirror the repo's config files; memories add what's written nowhere.
 - Never import secrets: if a config file embeds tokens, keys, or internal URLs that shouldn't be team-visible, flag the lines and exclude them from the imported blueprint.
-- Typed edges (`vibexp_io_link_resources`): `governed-by` → object must be a blueprint; `built-from` → object must be a prompt; `explained-by` → object must be a memory; `supersedes` → both ends the same type. No self- or cross-project links; re-linking an existing edge is a safe no-op. Tool not available (older server) → skip linking silently, never fail the skill over it.
+- Typed edges (`link_resources`): `governed-by` → object must be a blueprint; `built-from` → object must be a prompt; `explained-by` → object must be a memory; `supersedes` → both ends the same type. No self- or cross-project links; re-linking an existing edge is a safe no-op. Tool not available (older server) → skip linking silently, never fail the skill over it.

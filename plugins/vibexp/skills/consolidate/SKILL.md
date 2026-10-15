@@ -22,7 +22,7 @@ Git remote for project detection: !`git remote get-url origin 2>/dev/null || ech
 
 ## Step 0 — Pick the VibeXP transport (CLI-first)
 
-Follow **`${CLAUDE_PLUGIN_ROOT}/references/transport.md`**: probe with `command -v vibexp && vibexp whoami` — installed and authenticated → use the official CLI (a big win for this skill: `--format json --jq` trims the inventory pages to just id/slug/title/status at the source); otherwise use the `vibexp_io_*` MCP tools (match on the `vibexp_io_` fragment / core name, never a specific alias). Neither available → STOP and help the user connect per that reference. Steps below name operations by MCP core name; on the CLI transport use the mapped command.
+Follow **`${CLAUDE_PLUGIN_ROOT}/references/transport.md`**: probe with `command -v vibexp && vibexp whoami` — installed and authenticated → use the official CLI (a big win for this skill: `--format json --jq` trims the inventory pages to just id/slug/title/status at the source); otherwise use the `vibexp_io_*` MCP tools (match on the `vibexp_io_` fragment / core name, never a specific alias). Neither available → STOP and offer to run `/vibexp:install` (guided CLI install + sign-in), or the MCP route, per that reference. Steps below name operations by MCP core name; on the CLI transport use the mapped command.
 
 ## Step 1 — Resolve scope
 
@@ -91,7 +91,7 @@ Summarize what changed: memories N → M active, artifacts N → M active; what 
 
 ## Conventions (apply throughout)
 
-- Every tool except `get_user` and `list_teams_and_projects` requires `team_id` (UUID or slug).
+- Every operation except `get_user` and `list_teams_and_projects` requires `team_id` (UUID or slug; the CLI's `--team` takes the UUID).
 - Identifiers differ per resource type: memories are read/updated by `id`; artifacts and blueprints by `project_id` + `slug`.
 - Excerpts are for triage only; fetch full content before any edit.
 - Archive over delete, always. Every destructive-looking action must appear in the confirmed plan first.
