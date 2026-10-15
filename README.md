@@ -8,12 +8,14 @@ These plugins encode VibeXP best practices as installable skills, built around t
 
 ## Prerequisites
 
-A way to reach your VibeXP instance — either works; the skills prefer the CLI when both are present (leaner on context tokens, and it can read full blueprint/prompt content):
+A VibeXP instance — VibeXP is self-hosted, so this is your organization's own deployment (new to VibeXP? It's one `docker compose up -d` away: [github.com/vibexp/vibexp](https://github.com/vibexp/vibexp)) — and a way to reach it. Either works; the skills prefer the CLI when both are present (leaner on context tokens, and it can read full blueprint/prompt content):
 
-**Official CLI** — install it, then authenticate:
+**Official CLI** — easiest: install the plugin (below) and run `/vibexp:install`, which installs the CLI, connects it to your instance and signs you in (browser OAuth, or an API key on headless hosts). Manually:
 
 ```sh
-vibexp auth login
+brew install vibexp/tap/vibexp        # or a release binary: github.com/vibexp/cli/releases
+vibexp config set-context my-org --base-url https://<your-vibexp-host>
+vibexp auth login                     # --with-api-key where browser login isn't possible
 ```
 
 **MCP** — connect Claude Code over MCP (OAuth in the browser, no API key):
@@ -22,7 +24,7 @@ vibexp auth login
 claude mcp add --transport http vibexp https://<your-vibexp-host>/mcp/v1/common
 ```
 
-Use `https://connect.vibexp.io/mcp/v1/common` for the hosted instance, or your own deployment's URL if you [self-host](https://docs.vibexp.io). New to VibeXP? It's one `docker compose up -d` away: [github.com/vibexp/vibexp](https://github.com/vibexp/vibexp).
+Use your own deployment's host. Documentation: [vibexp.io/docs](https://vibexp.io/docs/) — or just ask `/vibexp:help`.
 
 ## Install
 
@@ -42,6 +44,8 @@ Then inside Claude Code:
 
 | Skill | What it does |
 |---|---|
+| `/vibexp:install` | Install the VibeXP CLI and connect it to your organization's instance: detects what's done, installs the right binary, verifies your instance URL, signs in via browser OAuth — or, where that's not possible, guides you through creating an API key and gives you the exact command to run in your own terminal (the key never enters the chat). |
+| `/vibexp:help` | Ask anything about VibeXP: answers are looked up in the official docs (only the pages the question needs) and the CLI's own `--help`, adapted to your setup, with source links — never guessed. |
 | `/vibexp:prime` | Start a task with your team's knowledge: retrieves only the slice relevant to the task for the current project (auto-detected from your git remote) — full content for what the work needs now, a knowledge map for just-in-time fetching later — and briefs you before working. |
 | `/vibexp:wrap` | End a session by writing back: audits the knowledge the session primed with and corrects what went stale, saves durable learnings merge-first (existing memories updated over new ones created), extends living artifacts, syncs team-relevant local knowledge changes, records typed relations (where the server supports linking), posts a feed update — and recommends `/vibexp:consolidate` when the base has outgrown its target shape. |
 | `/vibexp:consolidate` | Garden the knowledge base with effort matched to its state: a cheap triage pass when it's healthy, a deep pass when it's not — compacting memories into canonicals, digesting artifact piles, correcting or archiving stale entries (oldest-untouched first), and promoting recurring feed lessons — merges leave a `supersedes` trail where the server supports linking. |

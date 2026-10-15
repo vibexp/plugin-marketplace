@@ -18,11 +18,18 @@ command -v vibexp >/dev/null 2>&1 && vibexp whoami >/dev/null 2>&1
 - **Non-zero** → use the `vibexp_io_*` MCP tools if any are available.
 - **CLI installed but unauthenticated, and no MCP tools** → STOP and offer both
   fixes; either works:
-  - CLI: `vibexp auth login` (browser OAuth; `--with-api-key` for headless).
+  - CLI: **`/vibexp:install`** — guided install + sign-in against the user's
+    instance (browser OAuth, API-key fallback for headless hosts). Manual
+    equivalent: `vibexp config set-context <name> --base-url https://<your-vibexp-host>`
+    then `vibexp auth login` (`--with-api-key` where OAuth isn't available).
   - MCP: `claude mcp add --transport http vibexp https://<your-vibexp-host>/mcp/v1/common`
-    (hosted instance: `https://connect.vibexp.io/mcp/v1/common`; OAuth in the
-    browser, no API key), then restart or `/mcp`. Docs: https://docs.vibexp.io
+    (OAuth in the browser, never an API key), then restart or `/mcp`.
+    Docs: https://vibexp.io/docs/user-guide/mcp-server/
 - **Neither installed** → same STOP; the MCP route needs no local install.
+
+VibeXP is self-hosted — there is no default instance. `<your-vibexp-host>` is
+the organization's own URL (the one its web app is served from); never assume
+one.
 
 Why CLI first: responses can be trimmed at the source (`--format json` +
 `--jq`), so far fewer tokens enter the context; and the CLI has full reads for
@@ -51,6 +58,7 @@ Skills name operations by MCP core name; on the CLI transport use:
 | `link_resources` | `vibexp relations create --from-type <t> --from-id <id> --relation-type <r> --to-type <t> --to-id <id> --origin ai` |
 | `list_resource_metadata` | `vibexp metadata` |
 | `upload_attachment` / `list_attachments` | `vibexp attachment` |
+| `list_statuses` · `lock_resource` | *(no CLI equivalent — MCP only; use the per-call fallback below)* |
 
 `vibexp <cmd> --help` is the ground truth for flags — never guess one. For
 anything unmapped, `vibexp api` calls any endpoint (last resort).
@@ -82,7 +90,10 @@ is missing, check this list before working around it.
   used over MCP (e.g. `Claude Code`) — the CLI's default (`vibexp-cli`) would
   fragment the thread identity.
 - **Archive over delete, still**: archiving is `update --status archived`. The
-  CLI exposes `delete` subcommands; these skills never use them.
+  CLI exposes `delete` subcommands; these skills never use them. Statuses
+  differ by type: memories/artifacts `active|draft|archived`, blueprints
+  `active|expired` (retire a blueprint with `expired` — it has no `archived`),
+  prompts `draft|published` — plus any custom team statuses (`list_statuses`).
 - **Excerpt-vs-get still applies**: `search`/`list` return excerpts; run the
   `get` command before relying on or editing content.
 - **Memory bodies live under `text`, not `content`.** `vibexp memory get <id>

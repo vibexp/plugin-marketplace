@@ -17,7 +17,7 @@ Task provided by the user: $ARGUMENTS
 
 ## Step 0 — Pick the VibeXP transport (CLI-first)
 
-Follow **`${CLAUDE_PLUGIN_ROOT}/references/transport.md`**: probe with `command -v vibexp && vibexp whoami` — installed and authenticated → use the official CLI (token-cheaper; trim responses with `--format json --jq`); otherwise use the `vibexp_io_*` MCP tools (match on the `vibexp_io_` fragment, never assume an alias). Neither available → STOP and help the user connect per that reference. Steps below name operations by MCP core name; on the CLI transport use the mapped command.
+Follow **`${CLAUDE_PLUGIN_ROOT}/references/transport.md`**: probe with `command -v vibexp && vibexp whoami` — installed and authenticated → use the official CLI (token-cheaper; trim responses with `--format json --jq`); otherwise use the `vibexp_io_*` MCP tools (match on the `vibexp_io_` fragment, never assume an alias). Neither available → STOP and offer to run `/vibexp:install` (guided CLI install + sign-in), or the MCP route, per that reference. Steps below name operations by MCP core name; on the CLI transport use the mapped command.
 
 ## Step 1 — Establish the task and pick the retrieval tier
 
@@ -77,7 +77,7 @@ Record what this prime did per **`${CLAUDE_PLUGIN_ROOT}/references/session-ledge
 
 ## Conventions (apply throughout)
 
-- Every operation except `get_user` and `list_teams_and_projects` requires `team_id` (UUID or slug).
+- Every operation except `get_user` and `list_teams_and_projects` requires `team_id` (UUID or slug; the CLI's `--team` takes the UUID).
 - List/search return excerpts or truncated text by design; `get` returns full content. Don't treat an excerpt as the whole document.
 - List endpoints cap at 10 items per page; `search` allows `limit` up to 100 (default 10).
 - Token budget: the brief should be a small fraction of the context window. When in doubt between fetching and mapping, map — the knowledge map makes deferred context one call away.
